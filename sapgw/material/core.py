@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 
 """
-MATERIALS SKD
+MATERIALS SDK
 """
 
 __author__ = "Davide Pellegrino"
@@ -11,6 +11,7 @@ __version__ = "2.1.12"
 __date__ = "2019-11-07"
 
 import json, logging, time
+from utils.cache import Cache as cachemodule
 from sapgw.session import Session, parseApiError
 
 logger = logging.getLogger(__name__)
@@ -22,15 +23,15 @@ class Material(object):
 
     material_id = None
 
-    def __init__(self, profile_name=None):
+    def __init__(self, profile_name=None, use_cache=False):
         """
         Init Material class.
         """
-        logger.debug(f'Init Material SDK {profile_name}')
+        logger.debug(f'Init Material SDK {profile_name}: use cache {use_cache}')
         session = Session(profile_name)
-        self.apibot = session.apibot
         self.endpoint = session.ep_sapgw
-
+        if use_cache:
+            self.cache = cachemodule()
 
     def getMaterialAna(self):
         """
@@ -42,16 +43,18 @@ class Material(object):
             '$expand' : 'ToDescriptions'
         }
         rq = f"{self.endpoint}/ZMATERIAL_GET_ALL_SU_SRV/zmaterial_client_dataSet(Material='{self.material_id}')"
-        cachekey = Cache.createCacheKey(rq, payload)
-        if not self.refresh and Cache.isCache(cachekey):
-            material_ana = Cache.fromCache(cachekey)
-        else:
-            r = self.s.get(rq, params=payload)
-            if 200 != r.status_code:
-                self.parseApiError(r)
-                return False
-            material_ana = r.text
-            Cache.toCache(cachekey, material_ana)
+        if self.cache:
+            cachekey = rq+str(json.dumps(payload))
+            data = self.cache.read(cachekey)
+            if data:
+                return data
+        r = self.endpoint.get(rq, params=payload)
+        if 200 != r.status_code:
+            parseApiError(r)
+            return False
+        material_ana = r.text
+        if self.cache:
+            self.cache.create(cachekey, material_ana)
         return material_ana
 
     def getMaterialClass(self):
@@ -63,14 +66,27 @@ class Material(object):
             '$format' : 'json'
         }
         rq = f"{self.endpoint}/ZMATERIAL_CLASSIFICATION_SU_SRV/z_material_classSet(Material='{self.material_id}')/ToClassification"
-        cachekey = Cache.createCacheKey(rq, payload)
-        if not self.refresh and Cache.isCache(cachekey):
-            material_class = Cache.fromCache(cachekey)
-        else:
-            r = self.s.get(rq, params=payload)
-            if 200 != r.status_code:
-                self.parseApiError(r)
-                return False
-            material_class = r.text
-            Cache.toCache(cachekey, material_class)
+        if self.cache:
+            cachekey = rq+str(json.dumps(payload))
+            data = self.cache.read(cachekey)
+            if data:
+                return data
+        r = self.endpoint.get(rq, params=payload)
+        if 200 != r.status_code:
+            parseApiError(r)
+            return False
+        material_class = r.text
+        if self.cache:
+            self.cache.create(cachemodule, material_class)
         return material_class
+
+def test():
+    """ test Material class."""
+    import argparse
+    # material = Material(use_cache=True)
+    # material.material_id = 1290
+    # material.getMaterialAna()
+
+if __name__ == '__main__':
+    """ Do Test """  
+    test()
