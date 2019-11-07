@@ -12,7 +12,7 @@ logger = logging.getLogger()
 class Cache(object):
     """ Cache utilities."""
 
-    cachePath= '~/.cache/sapgw'    
+    cachePath= '.cache/sapgw'    
 
     def __init__(self):
         """Init new Cache utility."""

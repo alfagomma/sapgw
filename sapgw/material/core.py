@@ -79,5 +79,5 @@ class Material(object):
             return False
         material_class = r.text
         if self.cache:
-            self.cache.create(cachemodule, material_class)
+            self.cache.create(cachekey, material_class)
         return material_class
