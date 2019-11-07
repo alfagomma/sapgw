@@ -7,7 +7,7 @@ Cache utility.
 
 import os, hashlib, json, logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 class Cache(object):
     """ Cache utilities."""
@@ -16,7 +16,9 @@ class Cache(object):
 
     def __init__(self):
         """Init new Cache utility."""
+        logger.debug(f'Init cache path {self.cachePath}..')
         if not os.path.exists(self.cachePath):
+            logger.debug(f'Creating cache path {self.cachePath}')
             os.makedirs(self.cachePath)
 
     def read(self, name):
@@ -24,6 +26,7 @@ class Cache(object):
         logger.debug(f'Init read cache {name}...')        
         cachekey = self.__createCacheKey(name)
         if not self.__isCache(cachekey):
+            logger.debug(f'{cachekey} is not cached!')
             return False
         try:
             f = open(f'{self.cachePath}/{cachekey}', 'r')
@@ -34,10 +37,11 @@ class Cache(object):
             return False
         return fromcache
 
-    def create(self, name, data):
+    def create(self, name, data=None):
         """
         Salva il dato in cache.
         """
+        logger.debug(f'Creating {name} cache..')
         cachekey = self.__createCacheKey(name)
         try:
             f = open(f'{self.cachePath}/{cachekey}', 'w')

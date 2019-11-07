@@ -11,16 +11,16 @@ import requests
 import configparser
 from sys import exit
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 class Session(object):
     """
     SAPGW SESSION Boot
     """
 
-    sapAgent = None
+    sapagent = None
 
-    def __init__(self, profile_name='default'):
+    def __init__(self, profile_name=None):
         """
         Session Init
         """
@@ -47,13 +47,13 @@ class Session(object):
         
         saprq = requests.Session()
         saprq.auth=(sap_username, sap_password)
-        self.sapAgent = saprq
+        self.sapagent = saprq
         return
     
     def testConnection(self):
         """ Test SAPGW Connection with auth credentials."""
         logger.debug('Init test connection...')
-        rUid = self.sapAgent.get('/')
+        rUid = self.sapagent.get('/')
         if 200 != rUid.status_code:
             parseApiError(rUid)
             return False

@@ -14,13 +14,14 @@ import json, logging, time
 from sapgw.utils.cache import Cache as cachemodule
 from sapgw.session import Session, parseApiError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 class Material(object):
     """
     SAPGW Materials.
     """
 
+    cache = None
     material_id = None
 
     def __init__(self, profile_name=None, use_cache=False):
@@ -29,6 +30,7 @@ class Material(object):
         """
         logger.debug(f'Init Material SDK {profile_name}: use cache {use_cache}')
         session = Session(profile_name)
+        self.sapagent = session.sapagent
         self.endpoint = session.ep_sapgw
         if use_cache:
             self.cache = cachemodule()
@@ -48,7 +50,7 @@ class Material(object):
             data = self.cache.read(cachekey)
             if data:
                 return data
-        r = self.endpoint.get(rq, params=payload)
+        r = self.sapagent.get(rq, params=payload)
         if 200 != r.status_code:
             parseApiError(r)
             return False
@@ -71,7 +73,7 @@ class Material(object):
             data = self.cache.read(cachekey)
             if data:
                 return data
-        r = self.endpoint.get(rq, params=payload)
+        r = self.sapagent.get(rq, params=payload)
         if 200 != r.status_code:
             parseApiError(r)
             return False
@@ -79,14 +81,3 @@ class Material(object):
         if self.cache:
             self.cache.create(cachemodule, material_class)
         return material_class
-
-def test():
-    """ test Material class."""
-    import argparse
-    # material = Material(use_cache=True)
-    # material.material_id = 1290
-    # material.getMaterialAna()
-
-if __name__ == '__main__':
-    """ Do Test """  
-    test()
