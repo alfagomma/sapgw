@@ -11,7 +11,7 @@ __version__ = "2.1.12"
 __date__ = "2019-11-07"
 
 import json, logging, time
-from sapgw.utils.cache import Cache as cachemodule
+from sapgw.utility.cache import Cache as cachemodule
 from sapgw.session import Session, parseApiError
 
 logger = logging.getLogger()
@@ -31,7 +31,7 @@ class Material(object):
         logger.debug(f'Init Material SDK {profile_name}: use cache {use_cache}')
         session = Session(profile_name)
         self.sapagent = session.sapagent
-        self.endpoint = session.ep_sapgw
+        self.host = session.sapgw_host
         if use_cache:
             self.cache = cachemodule()
 
@@ -44,7 +44,7 @@ class Material(object):
             '$format' : 'json',
             '$expand' : 'ToDescriptions'
         }
-        rq = f"{self.endpoint}/ZMATERIAL_GET_ALL_SU_SRV/zmaterial_client_dataSet(Material='{self.material_id}')"
+        rq = f"{self.host}/ZMATERIAL_GET_ALL_SU_SRV/zmaterial_client_dataSet(Material='{self.material_id}')"
         if self.cache:
             cachekey = rq+str(json.dumps(payload))
             data = self.cache.read(cachekey)
@@ -67,7 +67,7 @@ class Material(object):
         payload = {
             '$format' : 'json'
         }
-        rq = f"{self.endpoint}/ZMATERIAL_CLASSIFICATION_SU_SRV/z_material_classSet(Material='{self.material_id}')/ToClassification"
+        rq = f"{self.host}/ZMATERIAL_CLASSIFICATION_SU_SRV/z_material_classSet(Material='{self.material_id}')/ToClassification"
         if self.cache:
             cachekey = rq+str(json.dumps(payload))
             data = self.cache.read(cachekey)

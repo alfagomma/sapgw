@@ -33,7 +33,7 @@ class Session(object):
         if not config.has_section(profile_name):
             logger.error(f'Unknow {profile_name} configs!')
             exit(1)
-        self.ep_sapgw = config.get(profile_name, 'ep_sapgw')
+        self.sapgw_host = config.get(profile_name, 'sapgw_host')
         ## Credentials
         credentials_path = os.path.expanduser('~/.agcloud/credentials')
         credentials = configparser.ConfigParser()
