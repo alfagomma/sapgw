@@ -17,11 +17,11 @@ requires = [
 ]
 
 def get_version():
-    init = open(os.path.join(ROOT, 'agbot', '__init__.py')).read()
+    init = open(os.path.join(ROOT, 'sapgw', '__init__.py')).read()
     return VERSION_RE.search(init).group(1)
 
 setup(
-    name='agbot',
+    name='sapgw',
     version=get_version(),
     description='The SAPGW SDK for AGCloud ENV in Python',
     long_description=open('README.rst').read(),

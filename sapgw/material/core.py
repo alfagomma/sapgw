@@ -11,7 +11,7 @@ __version__ = "2.1.12"
 __date__ = "2019-11-07"
 
 import json, logging, time
-from utils.cache import Cache as cachemodule
+from sapgw.utils.cache import Cache as cachemodule
 from sapgw.session import Session, parseApiError
 
 logger = logging.getLogger(__name__)
