@@ -15,7 +15,6 @@ from sapgw.utility.cache import Cache as cachemodule
 from sapgw.session import Session, parseApiError
 
 logger = logging.getLogger()
-
 class Material(object):
     """
     SAPGW Materials.
