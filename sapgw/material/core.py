@@ -23,7 +23,7 @@ class Material(object):
     cache = None
     material_id = None
 
-    def __init__(self, profile_name=None, use_cache=False):
+    def __init__(self, profile_name='default', use_cache=False):
         """
         Init Material class.
         """
