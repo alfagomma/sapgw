@@ -29,7 +29,7 @@ class Material(object):
         self.material_id = material_id
         s = Session(profile_name)
         self.sapHost = s.getSapHost()
-        self.sapAgent = s.getSapConnecion()
+        self.sapAgent = s.create()
         if use_cache:
             self.cache = cachemodule()
 

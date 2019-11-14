@@ -49,7 +49,7 @@ class Session(object):
         host = self.config.get(self.profile, 'sapgw_host')
         return host
 
-    def getSapConnecion(self):
+    def create(self):
         """ create new sap connection """
         logger.debug('Init new sap connection...')
         sap_username = self.credentials.get(self.profile, 'sap_username')
@@ -65,7 +65,7 @@ def testConnection(self):
     from requests.exceptions import ConnectionError
     logger.debug('Init test connection...')
     s = Session()
-    sapagent = s.getSapConnecion()
+    sapagent = s.create()
     try:
         sapagent.get(s.getSapHost())
     except ConnectionError as ce:
