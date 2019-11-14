@@ -17,13 +17,13 @@ class Session(object):
     SAPGW SESSION Boot
     """
 
-    def __init__(self, profile_name=None):
+    def __init__(self, profile_name=False):
         """
         Session Init
         """
         if not profile_name:
             profile_name = 'default'
-        logger.debug(f'Init session with {profile_name} profile..')
+        logger.debug(f'Init sapgw session with {profile_name} profile..')
         config_path = os.path.expanduser('~/.agcloud/config')
         ## Config
         config = configparser.ConfigParser()

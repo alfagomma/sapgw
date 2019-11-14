@@ -21,7 +21,7 @@ class Material(object):
     """
     cache = False
     
-    def __init__(self, material_id:int, profile_name=None, use_cache=False):
+    def __init__(self, material_id:int, profile_name=False, use_cache=False):
         """
         Init Material class.
         """
