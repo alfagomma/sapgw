@@ -6,9 +6,8 @@
 SAPGW for AGCLOUD - Session Boot
 """
 
-import os, json, time, logging
-import requests
-import configparser
+import os, logging, requests, configparser
+from requests.adapters import HTTPAdapter
 from sys import exit
 
 logger = logging.getLogger()
@@ -18,22 +17,20 @@ class Session(object):
     SAPGW SESSION Boot
     """
 
-    sapagent = None
-
     def __init__(self, profile_name=None):
         """
         Session Init
         """
-        logger.debug(f'Init session with {profile_name} profie..')
+        if not profile_name:
+            profile_name = 'default'
+        logger.debug(f'Init session with {profile_name} profile..')
         config_path = os.path.expanduser('~/.agcloud/config')
-        
         ## Config
         config = configparser.ConfigParser()
         config.read(config_path)
         if not config.has_section(profile_name):
             logger.error(f'Unknow {profile_name} configs!')
             exit(1)
-        self.sapgw_host = config.get(profile_name, 'sapgw_host')
         ## Credentials
         credentials_path = os.path.expanduser('~/.agcloud/credentials')
         credentials = configparser.ConfigParser()
@@ -41,23 +38,43 @@ class Session(object):
         if not credentials.has_section(profile_name):
             logger.error(f'Unknow {profile_name} credentials!')
             exit(1)
-
-        sap_username = credentials.get(profile_name, 'sap_username')
-        sap_password = credentials.get(profile_name, 'sap_password')
-        
-        saprq = requests.Session()
-        saprq.auth=(sap_username, sap_password)
-        self.sapagent = saprq
+        self.profile = profile_name
+        self.config = config
+        self.credentials = credentials
         return
     
-    def testConnection(self):
-        """ Test SAPGW Connection with auth credentials."""
-        logger.debug('Init test connection...')
-        rUid = self.sapagent.get('/')
-        if 200 != rUid.status_code:
-            parseApiError(rUid)
-            return False
-        return True
+    def getSapHost(self):
+        """return sap host"""
+        logger.debug(f'Return sap host..')
+        host = self.config.get(self.profile, 'sapgw_host')
+        return host
+
+    def getSapConnecion(self):
+        """ create new sap connection """
+        logger.debug('Init new sap connection...')
+        sap_username = self.credentials.get(self.profile, 'sap_username')
+        sap_password = self.credentials.get(self.profile, 'sap_password')
+        logger.debug(f'Sap connection: {sap_username}:{sap_password}')
+        s = requests.Session()
+        s.auth=(sap_username, sap_password)
+        return s
+
+
+def testConnection(self):
+    """ Test SAPGW Connection with auth credentials."""
+    from requests.exceptions import ConnectionError
+    logger.debug('Init test connection...')
+    s = Session()
+    sapagent = s.getSapConnecion()
+    try:
+        sapagent.get(s.getSapHost())
+    except ConnectionError as ce:
+        logger.exception(f'{ce}')
+        return False
+    except Exception:
+        logger.error("Exception occurred", exc_info=True)
+        return False
+    return True
 
 
 def parseApiError(response):
@@ -66,8 +83,6 @@ def parseApiError(response):
     try:
         problem = response.text
     except Exception:
-        # Add handlers to the logger
-        logger.error('Not jsonable')
         problem = response.text
     msg = f'status {status} [{problem}]'
     logger.warning(msg)

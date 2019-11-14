@@ -19,18 +19,17 @@ class Material(object):
     """
     SAPGW Materials.
     """
-
-    cache = None
-    material_id = None
-
-    def __init__(self, profile_name='default', use_cache=False):
+    cache = False
+    
+    def __init__(self, material_id:int, profile_name=None, use_cache=False):
         """
         Init Material class.
         """
-        logger.debug(f'Init Material SDK {profile_name}: use cache {use_cache}')
-        session = Session(profile_name)
-        self.sapagent = session.sapagent
-        self.host = session.sapgw_host
+        logger.info(f'Init Material SDK: id {material_id} use cache {use_cache}...')
+        self.material_id = material_id
+        s = Session(profile_name)
+        self.sapHost = s.getSapHost()
+        self.sapAgent = s.getSapConnecion()
         if use_cache:
             self.cache = cachemodule()
 
@@ -38,18 +37,18 @@ class Material(object):
         """
         Anagrafica materiale.
         """
-        logger.debug('Reading material ana...')
+        logger.info('Reading material ana...')
         payload = {
             '$format' : 'json',
             '$expand' : 'ToDescriptions'
         }
-        rq = f"{self.host}/ZMATERIAL_GET_ALL_SU_SRV/zmaterial_client_dataSet(Material='{self.material_id}')"
+        rq = f"{self.sapHost}/ZMATERIAL_GET_ALL_SU_SRV/zmaterial_client_dataSet(Material='{self.material_id}')"
         if self.cache:
             cachekey = rq+str(json.dumps(payload))
             data = self.cache.read(cachekey)
             if data:
                 return data
-        r = self.sapagent.get(rq, params=payload)
+        r = self.sapAgent.get(rq, params=payload)
         if 200 != r.status_code:
             parseApiError(r)
             return False
@@ -62,17 +61,17 @@ class Material(object):
         """
         Classificazione materiale.
         """
-        logger.debug('Reading material class...')
+        logger.info('Reading material class...')
         payload = {
             '$format' : 'json'
         }
-        rq = f"{self.host}/ZMATERIAL_CLASSIFICATION_SU_SRV/z_material_classSet(Material='{self.material_id}')/ToClassification"
+        rq = f"{self.sapHost}/ZMATERIAL_CLASSIFICATION_SU_SRV/z_material_classSet(Material='{self.material_id}')/ToClassification"
         if self.cache:
             cachekey = rq+str(json.dumps(payload))
             data = self.cache.read(cachekey)
             if data:
                 return data
-        r = self.sapagent.get(rq, params=payload)
+        r = self.sapAgent.get(rq, params=payload)
         if 200 != r.status_code:
             parseApiError(r)
             return False
