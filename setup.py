@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -18,7 +18,7 @@ def get_version():
 
 setup(
     name='sapgw',
-    version="2.0.2",
+    version="2.0.3",
     description='The SAPGW SDK for AGCloud ENV in Python',
     long_description=open('README.rst').read(),
     author='Agenziasmart',
