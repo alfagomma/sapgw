@@ -79,3 +79,30 @@ class Material(object):
         if self.cache:
             self.cache.create(cachekey, material_class)
         return material_class
+
+    def getMaterialStock(self, stock=None):
+        """
+        Stock disponibile
+        """
+        logger.info('Reading material stock...')
+        payload = {
+            '$format' : 'json'
+        }
+        if stock:
+            payload['$filter']=f"Plant eq '{stock}'"
+        rq=f"{self.sapHost}/ZMATERIAL_GET_STOCK_SRV/zmaterial_stockSet('{self.material_id}')/To_Get_Stock"
+        if self.cache:
+            cachekey = rq+str(json.dumps(payload))
+            data = self.cache.read(cachekey)
+            if data:
+                return data
+        r = self.sapAgent.get(rq, params=payload)
+        if 200 != r.status_code:
+            parseApiError(r)
+            return False
+        material_stock = r.text
+        if self.cache:
+            self.cache.create(cachekey, material_stock)
+        return material_stock
+
+

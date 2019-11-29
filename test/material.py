@@ -27,6 +27,8 @@ def main(args):
     logger.info(ma)
     mc = m.getMaterialClass()
     logger.info(mc)
+    mc = m.getMaterialStock()
+    logger.info(mc)    
     return
 
 def parse_args():
