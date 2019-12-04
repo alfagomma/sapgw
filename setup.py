@@ -18,7 +18,7 @@ def get_version():
 
 setup(
     name='sapgw',
-    version="2.0.4",
+    version="2.0.5",
     description='The SAPGW SDK for AGCloud ENV in Python',
     long_description=open('README.rst').read(),
     author='Agenziasmart',
