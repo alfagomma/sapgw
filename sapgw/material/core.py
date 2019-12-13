@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 
 """
-MATERIALS SDK
+MATERIAL SDK
 """
 
 __author__ = "Davide Pellegrino"
