@@ -6,9 +6,14 @@
 SAPGW for AGCLOUD - Session Boot
 """
 
-import os, logging, requests, configparser
-from requests.adapters import HTTPAdapter
+import configparser
+import logging
+import os
+import time
 from sys import exit
+
+import requests
+from requests.adapters import HTTPAdapter
 
 logger = logging.getLogger()
 
@@ -16,58 +21,67 @@ class Session(object):
     """
     SAPGW SESSION Boot
     """
+    configPath='~/.agcloud/config'
+    credentialPath='~/.agcloud/credentials'
 
-    def __init__(self, profile_name=False):
+    host=False
+    agent = False
+    csrf = {}
+
+    def __init__(self, profile_name='default'):
         """
         Session Init
         """
-        if not profile_name:
-            profile_name = 'default'
         logger.debug(f'Init sapgw session with {profile_name} profile..')
-        config_path = os.path.expanduser('~/.agcloud/config')
+        config_path = os.path.expanduser(self.configPath)
         ## Config
         config = configparser.ConfigParser()
         config.read(config_path)
         if not config.has_section(profile_name):
             logger.error(f'Unknow {profile_name} configs!')
             exit(1)
+        #host
+        self.host = config.get(profile_name, 'sapgw_host')
         ## Credentials
-        credentials_path = os.path.expanduser('~/.agcloud/credentials')
+        credentials_path = os.path.expanduser(self.credentialPath)
         credentials = configparser.ConfigParser()
         credentials.read(credentials_path)
         if not credentials.has_section(profile_name):
             logger.error(f'Unknow {profile_name} credentials!')
             exit(1)
-        self.profile = profile_name
-        self.config = config
-        self.credentials = credentials
+        #agent
+        sap_username = credentials.get(profile_name, 'sap_username')
+        sap_password = credentials.get(profile_name, 'sap_password')
+        agent = requests.Session()
+        agent.auth=(sap_username, sap_password)
+        self.agent = agent
         return
-    
-    def getSapHost(self):
-        """return sap host"""
-        logger.debug(f'Return sap host..')
-        host = self.config.get(self.profile, 'sapgw_host')
-        return host
 
-    def create(self):
-        """ create new sap connection """
-        logger.debug('Init new sap connection...')
-        sap_username = self.credentials.get(self.profile, 'sap_username')
-        sap_password = self.credentials.get(self.profile, 'sap_password')
-        logger.debug(f'Sap connection: {sap_username}:{sap_password}')
-        s = requests.Session()
-        s.auth=(sap_username, sap_password)
-        return s
-
+    def getCsrfToken(self):
+        """Retrive csrf"""
+        logger.debug('Reading csrf')
+        now=int(time.time())
+        created_at = int(self.csrf['created_at']) if 'created_at' in self.csrf else False
+        if int(created_at-now)>300:return self.csrf['token']
+        rq = f"{self.host}/ZCUSTOMER_MAINTAIN_SRV')"
+        headers={'x-csrf-token': 'Fetch'}
+        r = self.agent.get(rq, headers=headers)
+        if 200 != r.status_code:return False
+        token = r.headers['x-csrf-token']
+        if not token:return False
+        self.csrf={
+            'token': token,
+            'created_at':int(time.time())
+        }
+        return token
 
 def testConnection(self):
     """ Test SAPGW Connection with auth credentials."""
     from requests.exceptions import ConnectionError
     logger.debug('Init test connection...')
     s = Session()
-    sapagent = s.create()
     try:
-        sapagent.get(s.getSapHost())
+        s.agent.get(s.host)
     except ConnectionError as ce:
         logger.exception(f'{ce}')
         return False
