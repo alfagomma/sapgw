@@ -18,23 +18,25 @@ def get_version():
 
 setup(
     name='sapgw',
-    version="2.0.5",
+    version="3.0.1",
     description='The SAPGW SDK for AGCloud ENV in Python',
     long_description=open('README.rst').read(),
     author='Agenziasmart',
     scripts=[],
     packages=find_packages(exclude=['tests*']),
     install_requires=[
-        'requests'
+        'requests',
+        'redis'
     ],
     license="Apache License 2.0",
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 3 - Production/Stable',
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8'
     ],
 )

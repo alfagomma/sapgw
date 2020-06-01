@@ -7,7 +7,6 @@ verify_ssl = true
 pylint = "*"
 
 [packages]
-requests = "*"
 sapgw = {editable = true,path = "."}
 
 [requires]

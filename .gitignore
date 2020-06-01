@@ -1,8 +1,6 @@
 .DS_Store
 .env
 venv/
-cache/
-.cache/
 logs
 .vscode
 Thumbs.db
@@ -32,3 +30,4 @@ env3
 
 # IntelliJ / PyCharm IDE
 .idea/
+.cache/
