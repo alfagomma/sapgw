@@ -7,10 +7,10 @@ MATERIALS TEST
 """
 
 __author__ = "Davide Pellegrino"
-__version__ = "2.1.12"
-__date__ = "2019-11-07"
+__date__ = "2020-06-01"
 
 import logging
+
 from sapgw.material.core import Material
 
 logger = logging.getLogger()
@@ -19,16 +19,33 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
 logger.addHandler(ch)
 
+class testMaterial():
+    """ test class """
+    def __init__(self, profile_name=None):
+        self.m = Material(profile_name)
+
+    def fullMaterial(self, material_id:str):
+        """ test ana + class """
+        mana = self.m.getMaterialAna(material_id)
+        print(mana)
+        mcls = self.m.getMaterialClass(material_id)
+        print(mcls)
+        return
+    
+    def stock(self, material_id):
+        """ test stock """
+        mstock = self.m.getMaterialStock(material_id)
+        print(mstock)
+        return
+
 def main(args):
     """ main test """
-    logger.info(f'Init main')
-    m = Material(material_id=args.material, profile_name=args.profile)
-    ma = m.getMaterialAna()
-    logger.info(ma)
-    mc = m.getMaterialClass()
-    logger.info(mc)
-    mc = m.getMaterialStock()
-    logger.info(mc)    
+    material_id=args.material
+    logger.info(f'Init main test {material_id}')
+
+    ts=testMaterial(args.profile_name)
+    ts.fullMaterial(material_id)
+    ts.stock(material_id)
     return
 
 def parse_args():
@@ -36,7 +53,6 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='Test SAP GW Material')
     parser.add_argument('--material',type=int, help='SAP Material ID', required=True)
-    parser.add_argument('--cache', help='Use cached data', action='store_true')
     parser.add_argument('--profile', type=str, help='Use specific profile env')
     return parser.parse_args()
 

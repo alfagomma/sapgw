@@ -3,36 +3,36 @@
 # -*- coding: utf-8 -*-
 
 """
-MATERIAL SDK
+MATERIAL
 """
 
 __author__ = "Davide Pellegrino"
-__date__ = "2020-05-27"
+__date__ = "2020-06-01"
 
 import json
 import logging
 import time
 
 from sapgw.session import Session, parseApiError
-from sapgw.utility.cache import Cache as cachemodule
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
+
 class Material(object):
     """
     SAPGW Materials.
     """
-    cache = False
     
-    def __init__(self, profile_name=False, use_cache=False):
+    def __init__(self, profile_name=None):
         """
         Init Material class.
         """
-        logger.info(f'Init Material SDK use cache {use_cache}...')
-        self.s = Session(profile_name)
-        if use_cache:
-            self.cache = cachemodule()
+        logger.info('Init Material...')
+        s = Session(profile_name)
+        host = s.config.get('sapgw_host')
+        self.host = host
+        self.s = s   
 
-    def getMaterialAna(self, material_id):
+    def getMaterialAna(self, material_id:str):
         """
         Anagrafica materiale.
         """
@@ -41,20 +41,16 @@ class Material(object):
             '$format' : 'json',
             '$expand' : 'ToDescriptions'
         }
-        rq = f"{self.s.host}/ZMATERIAL_GET_ALL_SU_SRV/zmaterial_client_dataSet(Material='{material_id}')"
-        if self.cache:
-            cachekey = rq+str(json.dumps(payload))
-            data = self.cache.read(cachekey)
-            if data:return data
-        r = self.s.agent.get(rq, params=payload)
+        rq = f"{self.host}/ZMATERIAL_GET_ALL_SU_SRV/zmaterial_client_dataSet(Material='{material_id}')"
+        agent=self.s.getAgent()
+        r = agent.get(rq, params=payload)
         if 200 != r.status_code:
             parseApiError(r)
             return False
         material_ana = r.text
-        if self.cache:self.cache.create(cachekey, material_ana)
         return material_ana
 
-    def getMaterialClass(self, material_id):
+    def getMaterialClass(self, material_id:str):
         """
         Classificazione materiale.
         """
@@ -62,20 +58,16 @@ class Material(object):
         payload = {
             '$format' : 'json'
         }
-        rq = f"{self.s.host}/ZMATERIAL_CLASSIFICATION_SU_SRV/z_material_classSet(Material='{material_id}')/ToClassification"
-        if self.cache:
-            cachekey = rq+str(json.dumps(payload))
-            data = self.cache.read(cachekey)
-            if data:return data
-        r = self.s.agent.get(rq, params=payload)
+        rq = f"{self.host}/ZMATERIAL_CLASSIFICATION_SU_SRV/z_material_classSet(Material='{material_id}')/ToClassification"
+        agent=self.s.getAgent()
+        r = agent.get(rq, params=payload)
         if 200 != r.status_code:
             parseApiError(r)
             return False
         material_class = r.text
-        if self.cache:self.cache.create(cachekey, material_class)
         return material_class
 
-    def getMaterialStock(self, material_id, plant=None):
+    def getMaterialStock(self, material_id:str, plant=None):
         """
         Stock disponibile.
         """
@@ -84,16 +76,11 @@ class Material(object):
             '$format' : 'json'
         }
         if plant:payload['$filter']=f"Plant eq '{plant}'"
-        rq=f"{self.s.host}/ZMATERIAL_GET_STOCK_SRV/zmaterial_stockSet('{material_id}')/To_Get_Stock"
-        if self.cache:
-            cachekey = rq+str(json.dumps(payload))
-            data = self.cache.read(cachekey)
-            if data:return data
-        r = self.s.agent.get(rq, params=payload)
+        rq=f"{self.host}/ZMATERIAL_GET_STOCK_SRV/zmaterial_stockSet('{material_id}')/To_Get_Stock"
+        agent=self.s.getAgent()
+        r = agent.get(rq, params=payload)
         if 200 != r.status_code:
             parseApiError(r)
             return False
         material_stock = r.text
-        if self.cache:self.cache.create(cachekey, material_stock)
         return material_stock
-

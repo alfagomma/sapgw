@@ -7,7 +7,6 @@ CUSTOMER TEST
 """
 
 __author__ = "Davide Pellegrino"
-__version__ = "1.1.1"
 __date__ = "2019-12-13"
 
 import logging
@@ -19,12 +18,27 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
 logger.addHandler(ch)
 
+class testCustomer():
+    """ test customer """
+
+    def __init__(self, profile_name=None):
+        """ init test """
+        self.c=Customer(profile_name)
+
+    def ana(self, customer_id:str):
+        """test customer ana"""
+        cana=self.c.getCustomerAna(customer_id)
+        print(cana)
+        return
+
+
 def main(args):
     """ main test """
     logger.info(f'Init main')
-    m = Customer(profile_name=args.profile)
-    cust_ana = m.getCustomerAna(args.customer)
-    logger.info(cust_ana)
+    customer_id=args.customer
+
+    tc = testCustomer(profile_name=args.profile)
+    tc.ana(customer_id)
     return
 
 def parse_args():
@@ -32,7 +46,6 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='Test SAP GW Customer')
     parser.add_argument('--customer',type=int, help='SAP Customer ID', required=True)
-    parser.add_argument('--cache', help='Use cached data', action='store_true')
     parser.add_argument('--profile', type=str, help='Use specific profile env')
     return parser.parse_args()
 

@@ -21,11 +21,13 @@ logger = logging.getLogger(__name__)
 class Session(object):
     """
     SAPGW session
+    tts 25minutes (csrf 30 min)
     """
     config=False
     __agent=False
     __credentials=False
     __cacheKey='ag:sapgw'
+    __ttl=1500
 
     def __init__(self, profile_name='default'):
         """
@@ -61,19 +63,58 @@ class Session(object):
         self.cache=Redis(host=redis_host, password=redis_pass, decode_responses=True)
         return True
 
-    def __createToken(self):
-        """ Create new session token. """
-        logger.info(f'Init new session token ...')
+    def __setToken(self, payload):
+        """save token """
+        logger.debug(f'Init set token {payload}')
+        expire_in=payload['expires_in']
+        uid=payload['access_token']
+        csrf=payload['csrf']
+        token = {
+            'uid' : uid,
+            'csrf' : csrf
+        }
+        tokenExpireAt=int(time.time()) + expire_in
+        self.cache.hmset(self.__cacheKey, token)
+        self.cache.expireat(self.__cacheKey, int(tokenExpireAt))
+        return token
+
+    def __getCsrfToken(self):
+        """ Get csrf token. """
+        logger.info(f'Reading csrf token ...')
         sap_username = self.__credentials.get('sap_username')
         sap_password = self.__credentials.get('sap_password')
         host = self.config.get('sapgw_host')
-        rqToken = f'{host}/ZCUSTOMER_MAINTAIN_SRV'
-        rUid = requests.get(rqToken, auth=(sap_username, sap_password))
-        if 200 != rUid.status_code:
-            parseApiError(rUid)
+        rq = f'{host}/ZCUSTOMER_MAINTAIN_SRV'
+        headers={'x-csrf-token': 'Fetch'}
+        r = requests.get(rq, headers=headers, auth=(sap_username, sap_password))
+        if 200 != r.status_code:
+            parseApiError(r)
             return False
-        responseUid = json.loads(rUid.text)
-        token = self.__setToken(responseUid)
+        csrf = r.headers['x-csrf-token']
+        return csrf
+
+    def __createToken(self):
+        """ Create a dummy token for SAP."""
+        logger.info(f'Creating new session token ...')
+        # workaround - simula body response object
+        csrf = self.__getCsrfToken()
+        body = {
+            'access_token': time.time(),
+            'csrf' : csrf,
+            'expires_in' : self.__ttl
+        }
+        token = self.__setToken(body)
+        return token
+
+    def __refreshToken(self):
+        """ Refresh current token. """
+        logger.info(f'Init refresh token ...')
+        csrf = self.__getCsrfToken()
+        body = {
+            'csrf' : csrf,
+            'expires_in' : self.__ttl
+        }
+        token = self.__setToken(body)
         return token
 
     def __getToken(self):
@@ -109,49 +150,13 @@ class Session(object):
             ttl = self.cache.ttl(self.__cacheKey)
             if ttl < 1:
                 agent=self.__createSessionAgent()
-            elif 1 <= ttl <= 900:
+            elif 1 <= ttl <= 120:
                 refreshedToken=self.__refreshToken()
                 agent = self.__createSessionAgent(refreshedToken)
             if not agent:
                 logger.error('Unable to create agent!')
                 exit(1)
         return agent
-
-
-
-
-    def getCsrfToken(self):
-        """Retrive csrf"""
-        logger.debug('Reading csrf')
-        now=int(time.time())
-        created_at = int(self.csrf['created_at']) if 'created_at' in self.csrf else False
-        if int(created_at-now)>300:return self.csrf['token']
-        rq = f"{self.host}/ZCUSTOMER_MAINTAIN_SRV')"
-        headers={'x-csrf-token': 'Fetch'}
-        r = self.agent.get(rq, headers=headers)
-        if 200 != r.status_code:return False
-        token = r.headers['x-csrf-token']
-        if not token:return False
-        self.csrf={
-            'token': token,
-            'created_at':int(time.time())
-        }
-        return token
-
-def testConnection(self):
-    """ Test SAPGW Connection with auth credentials."""
-    from requests.exceptions import ConnectionError
-    logger.debug('Init test connection...')
-    s = Session()
-    try:
-        s.agent.get(s.host)
-    except ConnectionError as ce:
-        logger.exception(f'{ce}')
-        return False
-    except Exception:
-        logger.error("Exception occurred", exc_info=True)
-        return False
-    return True
 
 def parseApiError(response):
     """ stampa errori api """
