@@ -15,8 +15,6 @@ import time
 
 from sapgw.session import Session, parseApiError
 
-logger = logging.getLogger(__name__)
-
 class Material(object):
     """
     SAPGW Materials.
@@ -26,7 +24,7 @@ class Material(object):
         """
         Init Material class.
         """
-        logger.info('Init Material...')
+        logging.info('Init Material...')
         s = Session(profile_name)
         host = s.config.get('sapgw_host')
         self.host = host
@@ -36,7 +34,7 @@ class Material(object):
         """
         Anagrafica materiale.
         """
-        logger.info(f'Reading material {material_id} ana...')
+        logging.info(f'Reading material {material_id} ana...')
         payload = {
             '$format' : 'json',
             '$expand' : 'ToDescriptions'
@@ -54,7 +52,7 @@ class Material(object):
         """
         Classificazione materiale.
         """
-        logger.info(f'Reading material {material_id} class...')
+        logging.info(f'Reading material {material_id} class...')
         payload = {
             '$format' : 'json'
         }
@@ -71,7 +69,7 @@ class Material(object):
         """
         Stock disponibile.
         """
-        logger.info(f'Reading material {material_id} stock...')
+        logging.info(f'Reading material {material_id} stock...')
         payload = {
             '$format' : 'json'
         }

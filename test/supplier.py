@@ -13,39 +13,38 @@ import logging
 
 from sapgw.supplier.core import Supplier
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-logger.addHandler(ch)
-
-class testSupplier():
+class test():
     """ test class """
     def __init__(self, profile_name=None):
+        logging.debug('Init test')
         self.s = Supplier(profile_name)
 
     def ana(self, supplier_id:str):
         """ test ana """
+        logging.debug(f'test ana {supplier_id}')
         sana = self.s.getSupplier(supplier_id)
-        print(sana)
-        return
+        logging.info(sana)
+        return True
         
 
 def main(args):
-    """ main test """
-    supplier_id=args.supplier
-    logger.info(f'Init main test {supplier_id}')
-
-    ts=testSupplier(args.profile_name)
-    ts.ana(supplier_id)
+    """ start testing """
+    logging.basicConfig(level=logging.INFO)
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    logging.debug(f'Init {__file__}')
+    t = test(profile_name=args.profile)
+    for atr in args.test:
+        if hasattr(t, atr):getattr(t, atr)()
     return
-
+    
 def parse_args():
     """Parse the args from main."""
     import argparse
-    parser = argparse.ArgumentParser(description='Test SAP GW')
-    parser.add_argument('--material',type=int, help='SAP Supplier ID', required=True)
-    parser.add_argument('--profile', type=str, help='Use specific profile env')
+    parser = argparse.ArgumentParser(description='Testing support')
+    parser.add_argument("--profile", type=str, help='Use specific profile env')
+    parser.add_argument("-t", "--test", nargs='+', help='What can I do for you?', required=True)
+    parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     return parser.parse_args()
 
 if __name__ == '__main__':

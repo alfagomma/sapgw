@@ -15,8 +15,6 @@ import time
 
 from sapgw.session import Session, parseApiError
 
-logger = logging.getLogger(__name__)
-
 class Customer(object):
     """
     SAPGW Customers.
@@ -26,7 +24,7 @@ class Customer(object):
         """
         Init Customer class.
         """
-        logger.info('Init SAP Customer...')
+        logging.info('Init SAP Customer...')
         s = Session(profile_name)
         host = s.config.get('sapgw_host')
         self.host = host
@@ -36,7 +34,7 @@ class Customer(object):
         """
         Anagrafica cliente.
         """
-        logger.info(f'Reading customer {customer_id} ana...')
+        logging.info(f'Reading customer {customer_id} ana...')
         payload = {
             '$format' : 'json',
         }
@@ -53,7 +51,7 @@ class Customer(object):
         """
         Create new customer.
         """
-        logger.info(f'Creating new customer...')
+        logging.info(f'Creating new customer...')
         rq = f"{self.host}/ZCUSTOMER_MAINTAIN_SRV/zcustomer_maintain_entity_set')"
         agent=self.s.getAgent()
         r = agent.post(rq, json=payload)

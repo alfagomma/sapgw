@@ -4,7 +4,7 @@ SAP Netweaver Gateway Middleware API
 
 NOTE
 -----------
-
+fix logging
 
 
 TODO

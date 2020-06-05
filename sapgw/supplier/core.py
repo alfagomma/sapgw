@@ -15,8 +15,6 @@ import time
 
 from sapgw.session import Session, parseApiError
 
-logger = logging.getLogger(__name__)
-
 class Supplier(object):
     """
     SAPGW Suppliers.
@@ -26,7 +24,7 @@ class Supplier(object):
         """
         Init Supplier class.
         """
-        logger.info('Init Supplier...')
+        logging.info('Init Supplier...')
         s = Session(profile_name)
         host = s.config.get('sapgw_host')
         self.host = host
@@ -36,7 +34,7 @@ class Supplier(object):
         """
         Anagrafica fornitore.
         """
-        logger.info(f'Reading supplier {supplier_id}...')
+        logging.info(f'Reading supplier {supplier_id}...')
         params = {
             '$format' : 'json'
         }
@@ -53,7 +51,7 @@ class Supplier(object):
         """
         Create new supplier.
         """
-        logger.info(f'Creating new supplier...')
+        logging.info(f'Creating new supplier...')
         rq = f"{self.host}/xxx"
         agent=self.s.getAgent()
         r = agent.post(rq, json=payload)

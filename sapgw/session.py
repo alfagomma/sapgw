@@ -16,32 +16,30 @@ from sys import exit
 import requests
 from redis import Redis
 
-logger = logging.getLogger(__name__)
-
 class Session(object):
     """
     SAPGW session
     tts 25minutes (csrf 30 min)
     """
+    
     config=False
     __agent=False
     __credentials=False
     __cacheKey='ag:sapgw'
     __ttl=1500
 
-    def __init__(self, profile_name='default'):
+    def __init__(self, profile_name=None):
         """
         Init SAPGW session.
         """
-        if not profile_name:
-            profile_name = 'default'        
-        logger.info(f'Init agbot session with {profile_name} profile.')
+        if not profile_name:profile_name='default'      
+        logging.debug(f'Init agbot session with {profile_name} profile.')
         ## Config
         config_path = os.path.expanduser('~/.agcloud/config')
         cp = configparser.ConfigParser()
         cp.read(config_path)
         if not cp.has_section(profile_name):
-            logger.error(f'Unknow {profile_name} configs!')
+            logging.error(f'Unknow {profile_name} configs!')
             exit(1)
         self.config=cp[profile_name]
         ## Credentials
@@ -49,7 +47,7 @@ class Session(object):
         ccp = configparser.ConfigParser()
         ccp.read(credentials_path)
         if not ccp.has_section(profile_name):
-            logger.error(f'Unknow {profile_name} credentials!')
+            logging.error(f'Unknow {profile_name} credentials!')
             exit(1)
         self.__credentials=ccp[profile_name]
         #cache
@@ -57,7 +55,7 @@ class Session(object):
 
     def __setCache(self):
         """ set cache """
-        logger.debug('Setting redis cache...')
+        logging.debug('Setting redis cache...')
         redis_host = self.config.get('redis_host', '127.0.0.1')
         redis_pass = self.__credentials.get('redis_password', None)
         self.cache=Redis(host=redis_host, password=redis_pass, decode_responses=True)
@@ -65,7 +63,7 @@ class Session(object):
 
     def __setToken(self, payload):
         """save token """
-        logger.debug(f'Init set token {payload}')
+        logging.debug(f'Init set token {payload}')
         expire_in=payload['expires_in']
         uid=payload['access_token']
         csrf=payload['csrf']
@@ -80,7 +78,7 @@ class Session(object):
 
     def __getCsrfToken(self):
         """ Get csrf token. """
-        logger.info(f'Reading csrf token ...')
+        logging.debug(f'Reading csrf token ...')
         sap_username = self.__credentials.get('sap_username')
         sap_password = self.__credentials.get('sap_password')
         host = self.config.get('sapgw_host')
@@ -95,7 +93,7 @@ class Session(object):
 
     def __createToken(self):
         """ Create a dummy token for SAP."""
-        logger.info(f'Creating new session token ...')
+        logging.debug(f'Creating new session token ...')
         # workaround - simula body response object
         csrf = self.__getCsrfToken()
         body = {
@@ -108,7 +106,7 @@ class Session(object):
 
     def __refreshToken(self):
         """ Refresh current token. """
-        logger.info(f'Init refresh token ...')
+        logging.debug(f'Init refresh token ...')
         csrf = self.__getCsrfToken()
         body = {
             'csrf' : csrf,
@@ -119,7 +117,7 @@ class Session(object):
 
     def __getToken(self):
         """ Read session token. If not exists, it creates it. """
-        logger.info('Init reading token..')
+        logging.debug('Init reading token..')
         token = self.cache.hgetall(self.__cacheKey)
         if not token:
             token = self.__createToken()
@@ -127,7 +125,7 @@ class Session(object):
 
     def __createSessionAgent(self, token=None):
         """ Create requests session. """
-        logger.debug('Creating new requests session')
+        logging.debug('Creating new requests session')
         agent=requests.Session()
         agent.headers.update({'user-agent': 'SAPGW-Session'})
         if not token:
@@ -136,13 +134,13 @@ class Session(object):
         try:
             agent.headers.update({'x-csrf-token': token['csrf'] })
         except Exception:
-            logger.error("Invalid token keys", exc_info=True)
+            logging.error("Invalid token keys", exc_info=True)
         self.__agent=agent
         return agent
 
     def getAgent(self):
         """Retrive API request session."""
-        logger.info('Get request agent')
+        logging.debug('Get request agent')
         agent=self.__agent
         if not agent:
             agent=self.__createSessionAgent()
@@ -154,19 +152,19 @@ class Session(object):
                 refreshedToken=self.__refreshToken()
                 agent = self.__createSessionAgent(refreshedToken)
             if not agent:
-                logger.error('Unable to create agent!')
+                logging.error('Unable to create agent!')
                 exit(1)
         return agent
 
 def parseApiError(response):
     """ stampa errori api """
-    logger.debug('Parsing error')
+    logging.debug('Parsing error')
     status = response.status_code
     try:
         problem = json.loads(response.text)
     except Exception:
         # Add handlers to the logger
-        logger.error('Not jsonable', exc_info=True)
+        logging.error('Not jsonable', exc_info=True)
         return False
     msg = f'status {status}'
     if 'title' in problem:
@@ -175,7 +173,7 @@ def parseApiError(response):
         for k,v in problem['errors'].items():
             msg+=f'\n\t -{k}:{v}'
     if status >=400 and status <500:
-        logger.warning(msg)
+        logging.warning(msg)
     else:
-        logger.error(msg)
+        logging.error(msg)
     return msg
