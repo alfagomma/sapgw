@@ -12,12 +12,6 @@ __date__ = "2019-12-13"
 import logging
 from sapgw.customer.core import Customer
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-logger.addHandler(ch)
-
 class test():
     """ test customer """
 
