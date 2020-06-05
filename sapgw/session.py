@@ -33,7 +33,7 @@ class Session(object):
         Init SAPGW session.
         """
         if not profile_name:profile_name='default'      
-        logging.debug(f'Init agbot session with {profile_name} profile.')
+        logging.debug(f'Init sapgw session with {profile_name} profile.')
         ## Config
         config_path = os.path.expanduser('~/.agcloud/config')
         cp = configparser.ConfigParser()
