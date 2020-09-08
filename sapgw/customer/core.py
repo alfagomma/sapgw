@@ -52,9 +52,15 @@ class Customer(object):
         Create new customer.
         """
         logging.info(f'Creating new customer...')
-        rq = f"{self.host}/ZCUSTOMER_MAINTAIN_SRV/zcustomer_maintain_entity_set')"
+        rq = f"{self.host}/ZCUSTOMER_MAINTAIN_SRV/zcustomer_maintain_entity_set"
         agent=self.s.getAgent()
         r = agent.post(rq, json=payload)
+        if 400 == r.status_code:
+            response=json.loads(r.text)
+            e=response['error']
+            msg=e['message']['value']
+            logging.warning(msg)
+            return False
         if 200 != r.status_code:
             parseApiError(r)
             return False
