@@ -39,8 +39,11 @@ class Supplier(object):
             '$format' : 'json'
         }
         rq = f"{self.host}/ZVENDOR_GETDETAIL_SU_SRV/zvendor_general_dataSet('{supplier_id}')"
+        print(rq)
         agent=self.s.getAgent()
         r = agent.get(rq, params=params)
+        print(r)
+        exit(1)
         if 200 != r.status_code:
             parseApiError(r)
             return False

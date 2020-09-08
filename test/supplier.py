@@ -19,10 +19,9 @@ class test():
         logging.debug('Init test')
         self.s = Supplier(profile_name)
 
-    def ana(self, supplier_id:str):
+    def ana(self):
         """ test ana """
-        logging.debug(f'test ana {supplier_id}')
-        sana = self.s.getSupplier(supplier_id)
+        sana = self.s.getSupplier(50000003)
         logging.info(sana)
         return True
         
