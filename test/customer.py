@@ -27,6 +27,31 @@ class test():
         logging.info(cana)
         return True
 
+    def createnew(self):
+        logging.debug('Creating new customer')
+        data =  {
+            "cid": "15",
+            "account_group":"CUST",
+            "name": "DAPE S.R.L.",
+            "channel": "MIS",
+            "tax_code": "00716950670",
+            "tax_code_2": "",
+            "phone": "",
+            "phone2": "",
+            "website": "dape.it",
+            "area1": "",
+            "area3": "",
+            "postalcode": "64022",
+            "region": "TE",
+            "address": "VIA FILETTO",
+            "street_number": "55/A",
+            "locality": "GIULIANOVA",
+            "country": "IT",
+            "short_address": ""
+        }
+        newcust=self.c.createCustomerAna(data)
+        logging.info(newcust)
+        return True
 
 def main(args):
     """ start testing """
