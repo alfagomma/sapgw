@@ -61,7 +61,7 @@ class Session(object):
         self.cache=Redis(host=redis_host, password=redis_pass, decode_responses=True)
         return True
 
-    def __setToken(self, payload):
+    def __saveTokenCache(self, payload):
         """save token """
         logging.debug(f'Init set token {payload}')
         expire_in=payload['expires_in']
@@ -76,84 +76,106 @@ class Session(object):
         self.cache.expireat(self.__cacheKey, int(tokenExpireAt))
         return token
 
-    def __getCsrfToken(self):
+    def __getCsrfToken(self, agent):
         """ Get csrf token. """
-        logging.debug(f'Reading csrf token ...')
-        sap_username = self.__credentials.get('sap_username')
-        sap_password = self.__credentials.get('sap_password')
+        logging.debug(f'Reading new csrf token from sap...')
+        # sap_username = self.__credentials.get('sap_username')
+        # sap_password = self.__credentials.get('sap_password')
         host = self.config.get('sapgw_host')
         rq = f'{host}/ZCUSTOMER_MAINTAIN_SRV'
         headers={'x-csrf-token': 'Fetch'}
-        r = requests.get(rq, headers=headers, auth=(sap_username, sap_password))
+        r = agent.get(rq, headers=headers)
         if 200 != r.status_code:
             parseApiError(r)
             return False
         csrf = r.headers['x-csrf-token']
+        logging.debug(f'OK, new sap csrf is {csrf}')
         return csrf
 
-    def __createToken(self):
+    def __createToken(self, agent):
         """ Create a dummy token for SAP."""
         logging.debug(f'Creating new session token ...')
         # workaround - simula body response object
-        csrf = self.__getCsrfToken()
+        csrf = self.__getCsrfToken(agent)
         body = {
             'access_token': time.time(),
             'csrf' : csrf,
             'expires_in' : self.__ttl
         }
-        token = self.__setToken(body)
+        token = self.__saveTokenCache(body)
         return token
 
-    def __refreshToken(self):
+    def __refreshToken(self, agent):
         """ Refresh current token. """
         logging.debug(f'Init refresh token ...')
-        csrf = self.__getCsrfToken()
+        csrf = self.__getCsrfToken(agent)
         body = {
             'csrf' : csrf,
             'expires_in' : self.__ttl
         }
-        token = self.__setToken(body)
+        token = self.__saveTokenCache(body)
         return token
 
-    def __getToken(self):
+    def __getToken(self, agent):
         """ Read session token. If not exists, it creates it. """
         logging.debug('Init reading token..')
-        token = self.cache.hgetall(self.__cacheKey)
+        token=False
+        #NON PUOI USARE CACHE, CREA SEMPRE UNO NUOVO
+        #token = self.cache.hgetall(self.__cacheKey)
         if not token:
-            token = self.__createToken()
+            logging.debug('Token is not in cache! Creating new...')
+            token = self.__createToken(agent)
         return token
 
     def __createSessionAgent(self, token=None):
         """ Create requests session. """
         logging.debug('Creating new requests session')
+        sap_username = self.__credentials.get('sap_username')
+        sap_password = self.__credentials.get('sap_password')        
         agent=requests.Session()
-        agent.headers.update({'user-agent': 'SAPGW-Session'})
+        agent.auth=(sap_username,sap_password)
+        logging.debug(f'Agent with auth {sap_username} - {sap_password}')
         if not token:
-            token = self.__getToken()
+            logging.debug('Unknow token. Getting new one!')
+            token = self.__getToken(agent)
+            logging.debug(f'Creatingsessionagent: generatated token is {token}')
             if not token:return False
+        logging.debug(f"Add csrf {token['csrf']} to agent header")
         try:
-            agent.headers.update({'x-csrf-token': token['csrf'] })
+            agent.headers.update({
+                'X-CSRF-Token': token['csrf'],
+                'user-agent': 'SAPGW-Session',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+                })
         except Exception:
             logging.error("Invalid token keys", exc_info=True)
         self.__agent=agent
         return agent
 
-    def getAgent(self):
+    def getAgent(self, csrf=None):
         """Retrive API request session."""
         logging.debug('Get request agent')
         agent=self.__agent
         if not agent:
             agent=self.__createSessionAgent()
-        else:
-            ttl = self.cache.ttl(self.__cacheKey)
-            if ttl < 1:
-                agent=self.__createSessionAgent()
-            elif 1 <= ttl <= 120:
-                refreshedToken=self.__refreshToken()
-                agent = self.__createSessionAgent(refreshedToken)
             if not agent:
                 logging.error('Unable to create agent!')
-                exit(1)
+                exit(1)            
+        #NON PUOI SALVARLO, OGNI VOLTA CHE LANCI requests.session(), CAMBI I COOKIE
+        #QUINDI CAMBI ANCHE I TOKEN SAP
+        # if not agent:
+        #     agent=self.__createSessionAgent()
+        # else:
+        #     ttl = self.cache.ttl(self.__cacheKey)
+        #     if ttl < 1:
+        #         agent=self.__createSessionAgent()
+        #     elif 1 <= ttl <= 120:
+        #         refreshedToken=self.__refreshToken(agent)
+        #         agent = self.__createSessionAgent(refreshedToken)
+        #     if not agent:
+        #         logging.error('Unable to create agent!')
+        #         exit(1)
         return agent
 
 def parseApiError(response):
@@ -164,8 +186,9 @@ def parseApiError(response):
         problem = json.loads(response.text)
     except Exception:
         # Add handlers to the logger
-        logging.error('Not jsonable', exc_info=True)
+        logging.error('Not jsonable %s' % response.text, exc_info=True)
         return False
+    logging.debug(problem)
     msg = f'status {status}'
     if 'title' in problem:
         msg+=f" / {problem['title']}"
