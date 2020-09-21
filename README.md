@@ -1,13 +1,11 @@
-SAPGW v3.0.1-beta
-====================
+# SAPGW v4.0.1-RC
+
 SAP Netweaver Gateway Middleware API
 
-NOTE
------------
+## NOTE
+
 fix logging
 
+## TODO
 
-TODO
------------
-
-- [ ] 
+- [ ]

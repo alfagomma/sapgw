@@ -12,13 +12,15 @@ from setuptools import find_packages, setup
 ROOT = os.path.dirname(__file__)
 VERSION_RE = re.compile(r'''__version__ = ['"]([0-9.]+)['"]''')
 
+
 def get_version():
     init = open(os.path.join(ROOT, 'sapgw', '__init__.py')).read()
     return VERSION_RE.search(init).group(1)
 
+
 setup(
     name='sapgw',
-    version="3.0.1",
+    version="4.0.1",
     description='The SAPGW SDK for AGCloud ENV in Python',
     long_description=open('README.rst').read(),
     author='Agenziasmart',

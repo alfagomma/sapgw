@@ -16,22 +16,14 @@ from sapgw.material.core import Material
 
 def main(args):
     """ start testing """
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.WARNING)
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
     logging.debug(f'Init {__file__}')
-
     m = Material(args.profile)
-    mana = m.getMaterialAna(args.material)
-    if 200 != mana.status_code:
-        print()
-    print(type(mana.json()), type(mana.text))
-    #
-    # mcls = m.getMaterialClass(args.material)
-    # print(mcls)
-    # mstock = m.getMaterialStock(args.material)
-    # print(mstock)
-    return
+    r = m.getMaterialAna(args.material)
+    logging.info(r)
+    return True
 
 
 def parse_args():

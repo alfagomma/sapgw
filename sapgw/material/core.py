@@ -13,7 +13,7 @@ import json
 import logging
 import time
 
-from sapgw.session import Session, parseApiError
+from sapgw.session import Session
 
 
 class Material(object):
@@ -43,11 +43,7 @@ class Material(object):
         rq = f"{self.host}/ZMATERIAL_GET_ALL_SU_SRV/zmaterial_client_dataSet(Material='{material_id}')"
         agent = self.s.getAgent()
         r = agent.get(rq, params=payload)
-        if 200 != r.status_code:
-            parseApiError(r)
-            return False
-        material_ana = r.text
-        return material_ana
+        return self.s.response(r)
 
     def getMaterialClass(self, material_id: str):
         """
@@ -60,11 +56,7 @@ class Material(object):
         rq = f"{self.host}/ZMATERIAL_CLASSIFICATION_SU_SRV/z_material_classSet(Material='{material_id}')/ToClassification"
         agent = self.s.getAgent()
         r = agent.get(rq, params=payload)
-        if 200 != r.status_code:
-            parseApiError(r)
-            return False
-        material_class = r.text
-        return material_class
+        return self.s.response(r)
 
     def getMaterialStock(self, material_id: str, plant=None):
         """
@@ -79,8 +71,4 @@ class Material(object):
         rq = f"{self.host}/ZMATERIAL_GET_STOCK_SRV/zmaterial_stockSet('{material_id}')/To_Get_Stock"
         agent = self.s.getAgent()
         r = agent.get(rq, params=payload)
-        if 200 != r.status_code:
-            parseApiError(r)
-            return False
-        material_stock = r.text
-        return material_stock
+        return self.s.response(r)

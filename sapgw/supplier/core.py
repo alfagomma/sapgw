@@ -13,13 +13,14 @@ import json
 import logging
 import time
 
-from sapgw.session import Session, parseApiError
+from sapgw.session import Session
+
 
 class Supplier(object):
     """
     SAPGW Suppliers.
     """
-    
+
     def __init__(self, profile_name=None):
         """
         Init Supplier class.
@@ -28,24 +29,20 @@ class Supplier(object):
         s = Session(profile_name)
         host = s.config.get('sapgw_host')
         self.host = host
-        self.s = s   
+        self.s = s
 
-    def getSupplier(self, supplier_id:str):
+    def getSupplier(self, supplier_id: str):
         """
         Anagrafica fornitore.
         """
         logging.info(f'Reading supplier {supplier_id}...')
         params = {
-            '$format' : 'json'
+            '$format': 'json'
         }
         rq = f"{self.host}/ZVENDOR_GETDETAIL_SU_SRV/zvendor_general_dataSet('{supplier_id}')"
-        agent=self.s.getAgent()
+        agent = self.s.getAgent()
         r = agent.get(rq, params=params)
-        if 200 != r.status_code:
-            parseApiError(r)
-            return False
-        supplier_data = r.text
-        return supplier_data
+        return self.s.response(r)
 
     def createSupplier(self, payload):
         """
@@ -53,10 +50,6 @@ class Supplier(object):
         """
         logging.info(f'Creating new supplier...')
         rq = f"{self.host}/xxx"
-        agent=self.s.getAgent()
+        agent = self.s.getAgent()
         r = agent.post(rq, json=payload)
-        if 200 != r.status_code:
-            parseApiError(r)
-            return False
-        supplier_data = r.text
-        return supplier_data   
+        return self.s.response(r)
