@@ -196,17 +196,13 @@ class Session(object):
         else:
             fr['status'] = 'ko'
             error = {}
-            if 'title' in body:
-                error['title'] = body['title']
-            if 'type' in body:
-                error['type'] = body['type']
-            if 'errors' in body:
-                error['errors'] = body['errors']
-            fr['error'] = error
+            if 'error' in body:
+                details = body['error']['message'] if 'message' in body['error'] else None
+                error['title'] = details['value']
             if r.status_code >= 400 and r.status_code < 500:
-                logging.warning(error)
+                logging.debug({'400': error})
             else:
-                logging.error(error)
+                logging.debug({'error': error})
         return json.dumps(fr)
 
 #  DEPRECATED
