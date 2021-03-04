@@ -140,6 +140,7 @@ class Session(object):
             if 'error' in body:
                 details = body['error']['message'] if 'message' in body['error'] else None
                 error['title'] = details['value']
+            fr['error']=error
             if r.status_code >= 400 and r.status_code < 500:
                 logging.debug({'400': error})
             else:
