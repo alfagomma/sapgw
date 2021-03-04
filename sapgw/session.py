@@ -26,16 +26,14 @@ class Session(object):
         Init SAPGW session.
         """
         profile_name = profile_name if profile_name else 'default'
-        logging.debug(f'init sapgw session -p {profile_name}')
+        logging.info(f'init sapgw session -p {profile_name}')
         self.__initProfileConfig(profile_name)
-        self.__initRedisInstance()
-
         self.__initRedisInstance()
 
     def __initProfileConfig(self, profile_name):
         """ load profile conf"""
         import configparser
-        logging.debug(f'Init {profile_name} profile..')
+        logging.info(f'Init {profile_name} profile..')
         # Config
         config_path = os.path.expanduser('~/.agcloud/config')
         cp = configparser.ConfigParser()
@@ -57,7 +55,7 @@ class Session(object):
     def __initRedisInstance(self):
         """init redis instance. """
         from redis import Redis
-        logging.debug('Setting redis cache instance...')
+        logging.info('Setting redis cache instance...')
         redis_host = self.config.get('redis_host')
         redis_pass = self.__credentials.get('redis_password')
         try:
@@ -81,7 +79,11 @@ class Session(object):
         # chiamo x leggere csrf e ricevo i cookie
         host = self.config.get('sapgw_host')
         rq = f'{host}/ZCUSTOMER_MAINTAIN_SRV'
-        r = agent.get(rq, headers={'x-csrf-token': 'Fetch'})
+        try:
+            r = agent.get(rq, headers={'x-csrf-token': 'Fetch'})
+        except Exception:
+            logging.error("Unable to fetch csrf token")
+            return False
         if 200 != r.status_code:
             logging.error('Fetch csrf token failed!')
             return False
@@ -91,37 +93,32 @@ class Session(object):
         self.redis.set(self.__cacheKey, csrf, ex=self.__ttl)
         # ora che ho la risposta csrf e so che REQUESTS ha con se i cookie,
         # aggiorno headers dell'agent
-        try:
-            agent.headers.update({
-                'X-CSRF-Token': csrf,
-                'user-agent': 'SAPGW-Session',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            })
-        except Exception:
-            logging.error("Invalid token keys", exc_info=True)
-            return False
-        self.__agent = agent
-        return True
+
+        agent.headers.update({
+            'X-CSRF-Token': csrf,
+            'user-agent': 'SAPGW-Session',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        })
+        self.__currentAgent = agent
+        return agent
 
     def getAgent(self, csrf=None):
         """Retrive API request session."""
-        logging.debug('Get request agent')
-        # ogni volta che viene chiamata un FX, getagent deve verificare se e da quanto tempo cè un a chiave sessione
-        # leggo da redis il ttl del cachekey
-        # primo controllo: la class python ha gia valorizzato un __agnet ?
-        if self.__agent:
+        logging.info('Get request agent')
+        if hasattr(self, '__currentAgent'):
             # bene, controllo il ttl
             ttl = self.redis.ttl(self.__cacheKey)
             if ttl < 5:
                 logging.debug('Invalid cache key')
-                self.__createSessionAgent()
+                agent = self.__createSessionAgent()
+            else:
+                agent = self.__currentAgent
         else:
-            self.__createSessionAgent()
-        if not self.__agent:
-            logging.error('Unable to create SAP sessionagent!')
-            exit(1)
-        return self.__agent
+            agent = self.__createSessionAgent()
+        if not agent:
+            raise Exception('Unable to create SAPGW Agent.')
+        return agent
 
     def response(self, r):
         """ default response object from requests"""
@@ -140,7 +137,7 @@ class Session(object):
             if 'error' in body:
                 details = body['error']['message'] if 'message' in body['error'] else None
                 error['title'] = details['value']
-            fr['error']=error
+            fr['error'] = error
             if r.status_code >= 400 and r.status_code < 500:
                 logging.debug({'400': error})
             else:

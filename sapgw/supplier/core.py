@@ -40,8 +40,12 @@ class Supplier(object):
             '$format': 'json'
         }
         rq = f"{self.host}/ZVENDOR_GETDETAIL_SU_SRV/zvendor_general_dataSet('{supplier_id}')"
-        agent = self.s.getAgent()
-        r = agent.get(rq, params=params)
+        try:
+            agent = self.s.getAgent()
+            r = agent.get(rq, params=params)
+        except Exception:
+            logging.error(f'Failed request {rq}')
+            return False
         return self.s.response(r)
 
     def createSupplier(self, payload):
@@ -50,6 +54,10 @@ class Supplier(object):
         """
         logging.info(f'Creating new supplier...')
         rq = f"{self.host}/xxx"
-        agent = self.s.getAgent()
-        r = agent.post(rq, json=payload)
+        try:
+            agent = self.s.getAgent()
+            r = agent.post(rq, json=payload)
+        except Exception:
+            logging.error(f'Failed request {rq}')
+            return False
         return self.s.response(r)

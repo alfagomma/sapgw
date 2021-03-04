@@ -40,8 +40,12 @@ class Customer(object):
             '$format': 'json',
         }
         rq = f"{self.host}/ZCUSTOMER_GETDETAIL_SU_SRV/zcustomer_general_dataSet('{customer_id}')"
-        agent = self.s.getAgent()
-        r = agent.get(rq, params=payload)
+        try:
+            agent = self.s.getAgent()
+            r = agent.get(rq, params=payload)
+        except Exception:
+            logging.error(f'Failed request {rq}')
+            return False
         return self.s.response(r)
 
     def createCustomerAna(self, payload):
@@ -50,6 +54,10 @@ class Customer(object):
         """
         logging.info(f'Creating new customer...')
         rq = f"{self.host}/ZCUSTOMER_MAINTAIN_SRV/zcustomer_maintain_entity_set"
-        agent = self.s.getAgent()
-        r = agent.post(rq, json=payload)
+        try:
+            agent = self.s.getAgent()
+            r = agent.post(rq, json=payload)
+        except Exception:
+            logging.error(f'Failed request {rq}')
+            return False
         return self.s.response(r)
