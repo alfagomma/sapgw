@@ -7,11 +7,9 @@ SUPPLIER
 """
 
 __author__ = "Davide Pellegrino"
-__date__ = "2020-06-01"
+__date__ = "2021-03-05"
 
-import json
 import logging
-import time
 
 from sapgw.session import Session
 
@@ -33,7 +31,7 @@ class Supplier(object):
 
     def getSupplier(self, supplier_id: str):
         """
-        Anagrafica fornitore.
+        Read supplier data.
         """
         logging.info(f'Reading supplier {supplier_id}...')
         params = {
@@ -48,16 +46,16 @@ class Supplier(object):
             return False
         return self.s.response(r)
 
-    def createSupplier(self, payload):
-        """
-        Create new supplier.
-        """
-        logging.info(f'Creating new supplier...')
-        rq = f"{self.host}/xxx"
-        try:
-            agent = self.s.getAgent()
-            r = agent.post(rq, json=payload)
-        except Exception:
-            logging.error(f'Failed request {rq}')
-            return False
-        return self.s.response(r)
+    # def createSupplier(self, payload):
+    #     """
+    #     Create new supplier.
+    #     """
+    #     logging.info(f'Creating new supplier...')
+    #     rq = f"{self.host}/xxx"
+    #     try:
+    #         agent = self.s.getAgent()
+    #         r = agent.post(rq, json=payload)
+    #     except Exception:
+    #         logging.error(f'Failed request {rq}')
+    #         return False
+    #     return self.s.response(r)
