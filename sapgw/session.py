@@ -18,6 +18,7 @@ class Session(object):
     tts 25minutes (csrf 30 min)
     """
 
+    __currentAgent = False
     __cacheKey = 'ag:sapgw:session'
     __ttl = 1500  # 25minuti
 
@@ -26,14 +27,14 @@ class Session(object):
         Init SAPGW session.
         """
         profile_name = profile_name if profile_name else 'default'
-        logging.info(f'init sapgw session -p {profile_name}')
+        logging.info(f'Init SAPGW session -p {profile_name}')
         self.__initProfileConfig(profile_name)
         self.__initRedisInstance()
 
     def __initProfileConfig(self, profile_name):
         """ load profile conf"""
         import configparser
-        logging.info(f'Init {profile_name} profile..')
+        logging.info(f'Loading profile {profile_name}..')
         # Config
         config_path = os.path.expanduser('~/.agcloud/config')
         cp = configparser.ConfigParser()
@@ -106,7 +107,7 @@ class Session(object):
     def getAgent(self, csrf=None):
         """Retrive API request session."""
         logging.info('Get request agent')
-        if hasattr(self, '__currentAgent'):
+        if self.__currentAgent:
             # bene, controllo il ttl
             ttl = self.redis.ttl(self.__cacheKey)
             if ttl < 5:
