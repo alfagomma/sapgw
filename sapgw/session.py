@@ -127,7 +127,11 @@ class Session(object):
         logging.debug(
             f'{r.url} ({r.elapsed}) {r.status_code}')
         # print(r.raise_for_status())
-        body = r.json() if r.text else None
+        try:
+            body = r.json() if r.text else None
+        except:
+            logging.error(f'Unable to json response {r.text}')
+            return False
         if r.ok:
             fr['status'] = 'ok'
             if body:
