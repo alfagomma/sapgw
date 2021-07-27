@@ -20,7 +20,7 @@ class Session(object):
 
     __currentAgent = False
     __cacheKey = 'ag:sapgw:session'
-    __ttl = 1500  # 25minuti
+    __ttl = (60*15)  # 15minuti
 
     def __init__(self, profile_name=None):
         """
