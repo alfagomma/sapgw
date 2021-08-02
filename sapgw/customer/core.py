@@ -51,11 +51,26 @@ class Customer(object):
     def createCustomerAna(self, payload):
         """
         Create new customer.
+        agent.headers.update({
+            'X-CSRF-Token': csrf,
+            'user-agent': 'SAPGW-Session',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        })
+        self.__currentAgent = agent
         """
         logging.info(f'Creating new customer...')
         rq = f"{self.host}/ZCUSTOMER_MAINTAIN_SRV/zcustomer_maintain_entity_set"
+        # recupero xcsrf
+        xcsrf = self.s.getXcsrf()
+        if not xcsrf:
+            logging.error(f'Failed to read xcsfr')
+            return False
         try:
             agent = self.s.getAgent()
+            agent.headers.update({
+                'X-CSRF-Token': xcsrf
+            })            
             r = agent.post(rq, json=payload)
         except Exception:
             logging.error(f'Failed request {rq}')

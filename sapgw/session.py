@@ -20,7 +20,7 @@ class Session(object):
 
     __currentAgent = False
     __cacheKey = 'ag:sapgw:session'
-    __ttl = (60*15)  # 15minuti
+    __ttl = (60*30)  # 30minuti
 
     def __init__(self, profile_name=None):
         """
@@ -76,7 +76,35 @@ class Session(object):
         sap_password = self.__credentials.get('sap_password')
         agent = requests.Session()
         agent.auth = (sap_username, sap_password)
-        logging.debug(f'Agent with auth {sap_username} - {sap_password}')
+        agent.headers.update({
+            'user-agent': 'SAPGW-Session',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        })
+        self.__currentAgent = agent
+        return agent
+
+    def getAgent(self, csrf=None):
+        """Retrive API request session."""
+        logging.info('Get request agent')
+        if self.__currentAgent:
+            return self.__currentAgent
+        return self.__createSessionAgent()
+
+    def getXcsrf(self):
+        """ Read XCSRF. """
+        logging.info('Read my xcsrf')
+        if not self.__currentAgent:
+            logging.warning('Unable to read XCSRF. Create agent first!')
+            return False
+        # bene, controllo il ttl  
+        if self.redis.ttl(self.__cacheKey) > 3:
+            return self.redis.get(self.__cacheKey)
+        #######################
+        logging.info('Sleeping 3sec waiting expiring...')
+        time.sleep(3)
+        #######################
+        agent = self.__currentAgent
         # chiamo x leggere csrf e ricevo i cookie
         host = self.config.get('sapgw_host')
         rq = f'{host}/ZCUSTOMER_MAINTAIN_SRV'
@@ -92,34 +120,7 @@ class Session(object):
         logging.debug(f'OK, new sap csrf is {csrf}')
         # salvo cache key ed inizio ttl
         self.redis.set(self.__cacheKey, csrf, ex=self.__ttl)
-        # ora che ho la risposta csrf e so che REQUESTS ha con se i cookie,
-        # aggiorno headers dell'agent
-
-        agent.headers.update({
-            'X-CSRF-Token': csrf,
-            'user-agent': 'SAPGW-Session',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        })
-        self.__currentAgent = agent
-        return agent
-
-    def getAgent(self, csrf=None):
-        """Retrive API request session."""
-        logging.info('Get request agent')
-        if self.__currentAgent:
-            # bene, controllo il ttl
-            ttl = self.redis.ttl(self.__cacheKey)
-            if ttl < 5:
-                logging.debug('Invalid cache key')
-                agent = self.__createSessionAgent()
-            else:
-                agent = self.__currentAgent
-        else:
-            agent = self.__createSessionAgent()
-        if not agent:
-            raise Exception('Unable to create SAPGW Agent.')
-        return agent
+        return csrf
 
     def response(self, r):
         """ default response object from requests"""
