@@ -37,7 +37,7 @@ class Supplier(object):
         params = {
             '$format': 'json'
         }
-        rq = f"{self.host}/ZVENDOR_GETDETAIL_SU_SRV/zvendor_general_dataSet('{supplier_id}')"
+        rq = f"{self.host}/ZVENDOR_GETDETAIL_SRV/zvendor_general_dataSet('{supplier_id}')"
         try:
             agent = self.s.getAgent()
             r = agent.get(rq, params=params)
