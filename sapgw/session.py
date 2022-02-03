@@ -5,11 +5,12 @@
 """
 SAPGW for AGCLOUD - Session Boot
 """
-import json
 import logging
 import os
 import time
 from sys import exit
+
+import requests
 
 
 class Session(object):
@@ -70,7 +71,7 @@ class Session(object):
 
     def __createSessionAgent(self):
         """ Create requests session. """
-        import requests
+
         logging.info('Creating new sap requests session')
         sap_username = self.__credentials.get('sap_username')
         sap_password = self.__credentials.get('sap_password')
@@ -83,6 +84,33 @@ class Session(object):
         })
         self.__currentAgent = agent
         return agent
+
+    def __manageRequestResponse(self, r: requests.Response):
+        """ parsing requests response"""
+        logging.debug(
+            f'manage requests response {r.url} ({r.elapsed}) {r.status_code}')
+        # prima cosa: è jsonabile?
+        try:
+            body = r.json()
+        except Exception as e:
+            logging.exception("Unable to parse json")
+            return False
+        # procedo
+        response = {}
+        if r.ok:
+            response['status'] = True
+            response = {**response, **body}
+        else:
+            response['status'] = False
+            __info = {}
+            if 'title' in body:
+                __info['title'] = body['title']
+            if 'type' in body:
+                __info['type'] = body['type']
+            if 'errors' in body:
+                __info['errors'] = body['errors']
+            response['error'] = __info
+        return response
 
     def getAgent(self, csrf=None):
         """Retrive API request session."""
@@ -97,7 +125,7 @@ class Session(object):
         if not self.__currentAgent:
             logging.warning('Unable to read XCSRF. Create agent first!')
             return False
-        # bene, controllo il ttl  
+        # bene, controllo il ttl
         if self.redis.ttl(self.__cacheKey) > 3:
             return self.redis.get(self.__cacheKey)
         #######################
@@ -122,30 +150,6 @@ class Session(object):
         self.redis.set(self.__cacheKey, csrf, ex=self.__ttl)
         return csrf
 
-    def response(self, r):
+    def response(self, response):
         """ default response object from requests"""
-        fr = {}
-        logging.debug(
-            f'{r.url} ({r.elapsed}) {r.status_code}')
-        # print(r.raise_for_status())
-        try:
-            body = r.json() if r.text else None
-        except:
-            logging.error(f'Unable to json response {r.text}')
-            return False
-        if r.ok:
-            fr['status'] = 'ok'
-            if body:
-                fr = {**fr, **body}
-        else:
-            fr['status'] = 'ko'
-            error = {}
-            if 'error' in body:
-                details = body['error']['message'] if 'message' in body['error'] else None
-                error['title'] = details['value']
-            fr['error'] = error
-            if r.status_code >= 400 and r.status_code < 500:
-                logging.debug({'400': error})
-            else:
-                logging.debug({'error': error})
-        return json.dumps(fr)
+        return self.__manageRequestResponse(response)

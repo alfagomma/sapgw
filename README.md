@@ -1,4 +1,4 @@
-# SAPGW v4.0.1-RC
+# SAPGW v4.1-beta
 
 [![Author](http://img.shields.io/badge/author-@b3b8-blue.svg?style=flat-square)](https://twitter.com/b3b8)
 [![Source Code](http://img.shields.io/badge/source-alfagomma/sapgw-blue.svg?style=flat-square)](https://github.com/alfagomma/sapgw)

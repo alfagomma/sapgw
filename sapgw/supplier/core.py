@@ -7,7 +7,7 @@ SUPPLIER
 """
 
 __author__ = "Davide Pellegrino"
-__date__ = "2021-03-05"
+__date__ = "2022-02-02"
 
 import logging
 
@@ -23,7 +23,7 @@ class Supplier(object):
         """
         Init Supplier class.
         """
-        logging.info('Init Supplier...')
+        logging.debug('Init Supplier...')
         s = Session(profile_name)
         host = s.config.get('sapgw_host')
         self.host = host
@@ -33,24 +33,20 @@ class Supplier(object):
         """
         Read supplier data.
         """
-        logging.info(f'Reading supplier {supplier_id}...')
+        logging.debug(f'Reading supplier {supplier_id}...')
         params = {
             '$format': 'json'
         }
         rq = f"{self.host}/ZVENDOR_GETDETAIL_SRV/zvendor_general_dataSet('{supplier_id}')"
-        try:
-            agent = self.s.getAgent()
-            r = agent.get(rq, params=params)
-        except Exception:
-            logging.error(f'Failed request {rq}')
-            return False
+        agent = self.s.getAgent()
+        r = agent.get(rq, params=params)
         return self.s.response(r)
 
     # def createSupplier(self, payload):
     #     """
     #     Create new supplier.
     #     """
-    #     logging.info(f'Creating new supplier...')
+    #     logging.debug(f'Creating new supplier...')
     #     rq = f"{self.host}/xxx"
     #     try:
     #         agent = self.s.getAgent()

@@ -7,11 +7,9 @@ CUSTOMER
 """
 
 __author__ = "Davide Pellegrino"
-__date__ = "2020-06-01"
+__date__ = "2022-02-02"
 
-import json
 import logging
-import time
 
 from sapgw.session import Session
 
@@ -40,15 +38,11 @@ class Customer(object):
             '$format': 'json',
         }
         rq = f"{self.host}/ZCUSTOMER_GETDETAIL_SU_SRV/zcustomer_general_dataSet('{customer_id}')"
-        try:
-            agent = self.s.getAgent()
-            r = agent.get(rq, params=payload)
-        except Exception:
-            logging.error(f'Failed request {rq}')
-            return False
+        agent = self.s.getAgent()
+        r = agent.get(rq, params=payload)
         return self.s.response(r)
 
-    def createCustomerAna(self, payload):
+    def createCustomerAna(self, payload: dict):
         """
         Create new customer.
         agent.headers.update({
@@ -66,13 +60,10 @@ class Customer(object):
         if not xcsrf:
             logging.error(f'Failed to read xcsfr')
             return False
-        try:
-            agent = self.s.getAgent()
-            agent.headers.update({
-                'X-CSRF-Token': xcsrf
-            })            
-            r = agent.post(rq, json=payload)
-        except Exception:
-            logging.error(f'Failed request {rq}')
-            return False
+
+        agent = self.s.getAgent()
+        agent.headers.update({
+            'X-CSRF-Token': xcsrf
+        })
+        r = agent.post(rq, json=payload)
         return self.s.response(r)

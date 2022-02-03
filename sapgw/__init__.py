@@ -1,4 +1,4 @@
-# Copyright 2013 Fairvox.com Srl. or its affiliates. All Rights Reserved.
+# Copyright 2022 Agenziasmart.com. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -12,4 +12,4 @@
 # language governing permissions and limitations under the License.
 
 __author__ = 'AgenziaSmart'
-__version__ = '4.0.1'
+__version__ = '4.1.1'

@@ -18,7 +18,7 @@ class Cache(object):
 
     def __init__(self):
         """Init new Cache utility."""
-        logging.info(f'Init cache path {self.cachePath}..')
+        logging.debug(f'Init cache path {self.cachePath}..')
         if not os.path.exists(self.cachePath):
             logging.debug(f'Creating cache path {self.cachePath}')
             os.makedirs(self.cachePath)
@@ -26,7 +26,7 @@ class Cache(object):
 
     def read(self, name):
         """ Recupero il dato in cache. """
-        logging.info(f'Init read cache {name}...')        
+        logging.debug(f'Init read cache {name}...')        
         cachekey = self.__createCacheKey(name)
         if not self.__isCache(cachekey):
             logging.debug(f'{cachekey} is not cached!')
@@ -46,7 +46,7 @@ class Cache(object):
         """
         Salva il dato in cache.
         """
-        logging.info(f'Creating {name} cache..')
+        logging.debug(f'Creating {name} cache..')
         cachekey = self.__createCacheKey(name)
         try:
             f = open(f'{self.cachePath}/{cachekey}', 'w')
@@ -63,7 +63,7 @@ class Cache(object):
         """
         Elimino tutti i file di cache.
         """
-        logging.info('Init cleaning cache dir ...')
+        logging.debug('Init cleaning cache dir ...')
         filelist = [ f for f in os.listdir(self.cachePath) ]
         for f in filelist:
             cachefile = os.path.join(self.cachePath, f)
@@ -73,12 +73,12 @@ class Cache(object):
 
     def __createCacheKey(self, name):
         """Genera una chiave cache """
-        logging.info(f'Creating cache key {name}')
+        logging.debug(f'Creating cache key {name}')
         __tmp = f'{json.dumps(name)}'
         cachekey = f'{hashlib.md5(__tmp.encode()).hexdigest()}.tmp'            
         return cachekey
     
     def __isCache(self, cachekey):
         """ verifica esistenza file in cache. """
-        logging.info(f'Checking {cachekey} key..')
+        logging.debug(f'Checking {cachekey} key..')
         return os.path.isfile(f'{self.cachePath}/{cachekey}')        
