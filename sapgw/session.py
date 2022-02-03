@@ -28,14 +28,14 @@ class Session(object):
         Init SAPGW session.
         """
         profile_name = profile_name if profile_name else 'default'
-        logging.info(f'Init SAPGW session -p {profile_name}')
+        logging.debug(f'Init SAPGW session -p {profile_name}')
         self.__initProfileConfig(profile_name)
         self.__initRedisInstance()
 
     def __initProfileConfig(self, profile_name):
         """ load profile conf"""
         import configparser
-        logging.info(f'Loading profile {profile_name}..')
+        logging.debug(f'Loading profile {profile_name}..')
         # Config
         config_path = os.path.expanduser('~/.agcloud/config')
         cp = configparser.ConfigParser()
@@ -57,7 +57,7 @@ class Session(object):
     def __initRedisInstance(self):
         """init redis instance. """
         from redis import Redis
-        logging.info('Setting redis cache instance...')
+        logging.debug('Setting redis cache instance...')
         redis_host = self.config.get('redis_host')
         redis_pass = self.__credentials.get('redis_password')
         try:
@@ -72,7 +72,7 @@ class Session(object):
     def __createSessionAgent(self):
         """ Create requests session. """
 
-        logging.info('Creating new sap requests session')
+        logging.debug('Creating new sap requests session')
         sap_username = self.__credentials.get('sap_username')
         sap_password = self.__credentials.get('sap_password')
         agent = requests.Session()
@@ -102,26 +102,29 @@ class Session(object):
             response = {**response, **body}
         else:
             response['status'] = False
-            __info = {}
-            if 'title' in body:
-                __info['title'] = body['title']
-            if 'type' in body:
-                __info['type'] = body['type']
-            if 'errors' in body:
-                __info['errors'] = body['errors']
-            response['error'] = __info
+            # parse sap nwgw error
+            error = body.get('error')
+            if error:
+                code = error.get('code')
+                message = error.get('message', {}).get('value')
+                __info = {}
+                if code:
+                    __info['type'] = code
+                if message:
+                    __info['title'] = message
+                response['error'] = __info
         return response
 
     def getAgent(self, csrf=None):
         """Retrive API request session."""
-        logging.info('Get request agent')
+        logging.debug('Get request agent')
         if self.__currentAgent:
             return self.__currentAgent
         return self.__createSessionAgent()
 
     def getXcsrf(self):
         """ Read XCSRF. """
-        logging.info('Read my xcsrf')
+        logging.debug('Read my xcsrf')
         if not self.__currentAgent:
             logging.warning('Unable to read XCSRF. Create agent first!')
             return False
@@ -129,7 +132,7 @@ class Session(object):
         if self.redis.ttl(self.__cacheKey) > 3:
             return self.redis.get(self.__cacheKey)
         #######################
-        logging.info('Sleeping 3sec waiting expiring...')
+        logging.debug('Sleeping 3sec waiting expiring...')
         time.sleep(3)
         #######################
         agent = self.__currentAgent
