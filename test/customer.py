@@ -44,7 +44,11 @@ def testCreatenew(profile_name):
 def testCustomer(profile_name, customer_id: str):
     logging.debug(f'test ana {customer_id}')
     c = Customer(profile_name)
-    cana = c.getCustomerAna(customer_id)
+    try:
+        cana = c.getCustomerAna(customer_id)
+    except Exception as e:
+        logging.exception(f'Unable to connecto sap')
+        return False
     logging.info(cana)
     return True
 
