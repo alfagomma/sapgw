@@ -89,20 +89,22 @@ class Session(object):
         """ parsing requests response"""
         logging.debug(
             f'manage requests response {r.url} ({r.elapsed}) {r.status_code}')
-        # prima cosa: è jsonabile?
+        response = {
+            'status': r.ok == True
+        }
+        if not r.text:
+            return response
         try:
             body = r.json()
         except Exception as e:
             logging.exception("Unable to parse json")
-            return False
-        # procedo
-        response = {}
-        if r.ok:
-            response['status'] = True
+            response['status'] = False
+            response['error'] = {'title': 'Unable to parse json'}
+            return response
+
+        if response.get('status'):
             response = {**response, **body}
         else:
-            response['status'] = False
-            # parse sap nwgw error
             error = body.get('error')
             if error:
                 code = error.get('code')
@@ -114,6 +116,8 @@ class Session(object):
                     __info['title'] = message
                 response['error'] = __info
         return response
+
+
 
     def getAgent(self, csrf=None):
         """Retrive API request session."""
