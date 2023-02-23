@@ -71,7 +71,6 @@ class Session(object):
 
     def __createSessionAgent(self):
         """ Create requests session. """
-
         logging.debug('Creating new sap requests session')
         sap_username = self.__credentials.get('sap_username')
         sap_password = self.__credentials.get('sap_password')
@@ -122,8 +121,8 @@ class Session(object):
     def getAgent(self, csrf=None):
         """Retrive API request session."""
         logging.debug('Get request agent')
-        if self.__currentAgent:
-            return self.__currentAgent
+        # if self.__currentAgent:
+        #     return self.__currentAgent
         return self.__createSessionAgent()
 
     def getXcsrf(self):
